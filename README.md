@@ -72,25 +72,8 @@ with app.app_context(): db.create_all()"
 ### 6️⃣ Run the app
 
 flask run
-Then visit 👉 http://127.0.0.1:5000/
 
-📂 Project Structure
-.
-├── app/
-│   ├── __init__.py
-│   ├── models.py
-│   ├── routes.py
-│   ├── templates/
-│   ├── static/
-│   │   └── images/
-│   └── ...
-├── scripts/
-│   └── news_scraper.py
-├── migrations/   # (if using Flask-Migrate)
-├── config.py
-├── run.py
-├── requirements.txt
-└── README.md
+
 
 ### 🔄 Workflow
 User logs in ➝ clicks Retrieve News
