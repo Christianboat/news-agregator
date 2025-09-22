@@ -1,53 +1,424 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghana Education News Aggregator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6f42c1;
+            --text-color: #212529;
+            --light-bg: #f8f9fa;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition-speed: 0.3s;
+        }
 
-{% block content %}
-<div class="row">
-    <div class="col-md-8">
-        <h2>This Week's Education News</h2>
+        body {
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background-color: #f5f7fa;
+        }
+
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background-color: rgba(13, 110, 253, 0.95) !important;
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-link {
+            color: white !important;
+            font-weight: 500;
+            opacity: 0.9;
+            transition: opacity var(--transition-speed);
+        }
+
+        .nav-link:hover {
+            opacity: 1;
+        }
+
+        .card {
+            border: none;
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            background-color: var(--primary-color) !important;
+            color: white;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn {
+            font-weight: 550;
+            transition: all var(--transition-speed);
+            border-radius: 4px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+        }
+
+        .btn-success {
+            background-color: #198754;
+            border-color: #198754;
+        }
+
+        .btn-success:hover {
+            background-color: #157347;
+            border-color: #157347;
+        }
+
+        .alert {
+            border-radius: 8px;
+            margin-bottom: 20px;
+            transition: opacity var(--transition-speed);
+        }
+
+        .alert-info {
+            background-color: #e8f3f9;
+            color: #0d6efd;
+            border-color: #cce5ff;
+        }
+
+        .card-img-top {
+            object-fit: cover;
+            height: 200px;
+        }
+
+        .news-daddy-script {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            white-space: pre-line;
+        }
+
+        #pipeline-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .spinner-large {
+            width: 3rem;
+            height: 3rem;
+        }
         
-        {% if news_items %}
-            {% for item in news_items %}
-            <div class="card mb-4">
-                {% if item.image_path %}
-                <img src="{{ url_for('static', filename='images/' + item.image_path) }}" class="card-img-top" alt="{{ item.title }}">
-                {% endif %}
-                <div class="card-body">
-                    <h5 class="card-title">{{ item.title }}</h5>
-                    <p class="card-text">{{ item.summary }}</p>
-                    <a href="{{ item.link }}" target="_blank" class="btn btn-primary">Read Full Article</a>
-                    
-                    {% if item.scripts %}
-                    <div class="mt-3">
-                        <h6>Social Media Script:</h6>
-                        <div class="bg-light p-3 rounded">
-                            {{ item.scripts[0].content | replace('\n', '<br>') | safe }}
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-                <div class="card-footer text-muted">
-                    Published: {{ item.published.strftime('%Y-%m-%d %H:%M') if item.published else 'Unknown' }}
-                </div>
-            </div>
-            {% endfor %}
-        {% else %}
-            <div class="alert alert-info">
-                No education news found for this week. Check back later!
-            </div>
-        {% endif %}
-    </div>
-    
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5>About This Platform</h5>
-            </div>
-            <div class="card-body">
-                <p>This platform automatically collects education-related news from various Ghanaian sources every week.</p>
-                <p>It generates social media scripts and sends them directly to your Telegram every Thursday evening.</p>
-                <p>You can also browse past weeks' results using the dashboard.</p>
+        #trigger-news-btn {
+            padding: 10px 20px;
+            font-size: 1.1rem;
+        }
+        
+        .news-item {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .news-image {
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .script-container {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+        
+        .last-updated {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .script-content {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            white-space: pre-line;
+        }
+        
+        .copy-btn {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-newspaper me-2"></i>Ghana Education News
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('routes.index') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('routes.dashboard') }}">Dashboard</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <span class="nav-link">Hello, Admin</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('routes.logout') }}">Logout</a>
+                    </li>
+                </ul>
             </div>
         </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Notification Area -->
+        <div id="notification-area"></div>
+
+        <!-- Pipeline Overlay (hidden by default) -->
+        <div id="pipeline-overlay" class="d-none">
+            <div class="text-center text-white">
+                <div class="spinner-border spinner-large" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Processing news articles... This may take a few minutes.</p>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2>This Week's Education News</h2>
+                    <button id="trigger-news-btn" class="btn btn-success">
+                        <i class="fas fa-sync-alt me-2"></i>Retrieve News Now
+                    </button>
+                </div>
+                <p class="last-updated">
+                    <i class="fas fa-clock me-1"></i> Last updated: 
+                    {% if news_items and news_items[0].created_at %}
+                        {{ news_items[0].created_at.strftime('%Y-%m-%d %H:%M') }}
+                    {% else %}
+                        Never
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- Refresh Notification -->
+        <div id="refresh-notification" class="alert alert-info d-none mb-4">
+            <i class="fas fa-sync-alt fa-spin me-2"></i> New content is being loaded...
+        </div>
+
+        <!-- Unified Script Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h4><i class="fas fa-microphone me-2"></i>News Daddy's Weekly Rundown</h4>
+                        <span class="status-badge bg-light text-dark">
+                            {% if unified_script %}Ready{% else %}Not Generated{% endif %}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="news-daddy-script">
+                            {% if unified_script %}
+                                {{ unified_script.content }}
+                                <div class="mt-3">
+                                    <button class="btn btn-sm btn-outline-primary copy-btn" data-content="{{ unified_script.content }}">
+                                        <i class="fas fa-copy me-1"></i> Copy Script
+                                    </button>
+                                </div>
+                            {% else %}
+                                This is where the unified script will appear after retrieval. Click the "Retrieve News Now" button to generate the latest education news summary.
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- News Items Container -->
+        <div id="news-container" class="row">
+            {% if news_items %}
+                {% for item in news_items %}
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">{{ item.title }}</h5>
+                            <small class="text-muted">{{ item.published.strftime('%Y-%m-%d') if item.published else 'Date unknown' }}</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% if item.image_path %}
+                                <div class="col-md-4 mb-3 mb-md-0">
+                                    <img src="{{ url_for('static', filename='images/' + item.image_path) }}" class="img-fluid rounded news-image" alt="{{ item.title }}">
+                                </div>
+                                {% endif %}
+                                <div class="col-md-{% if item.image_path %}8{% else %}12{% endif %}">
+                                    <p class="card-text">{{ item.summary }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <a href="{{ item.link }}" target="_blank" class="btn btn-sm btn-outline-primary">Read Full Article</a>
+                                        <small class="text-muted">
+                                            Source: 
+                                            {% if item.link.startswith('http') %}
+                                                {{ item.link.split('/')[2] }}
+                                            {% else %}
+                                                {{ item.link }}
+                                            {% endif %}
+                                        </small>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> No news items available yet. Click the "Retrieve News Now" button to fetch the latest education news.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
     </div>
-</div>
-{% endblock %}
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Fixed JavaScript Implementation -->
+    <script>
+        $(document).ready(function() {
+            // Set up application configuration
+            window.APP = {
+                triggerUrl: "{{ url_for('routes.trigger_news') }}",
+                statusUrl: "{{ url_for('routes.api_status') }}"
+            };
+
+            // Handle the "Retrieve News Now" button click
+            $('#trigger-news-btn').click(function() {
+                const $btn = $(this);
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...');
+                $('#refresh-notification').removeClass('d-none');
+                
+                // Show processing overlay
+                $('#pipeline-overlay').removeClass('d-none');
+
+                // Send AJAX request to trigger news pipeline
+                $.ajax({
+                    type: 'POST',
+                    url: window.APP.triggerUrl,
+                    success: function(response) {
+                        // Show success message
+                        showAlert('News retrieval started! All old content has been cleared. Page will refresh when complete.', 'success');
+                        
+                        // Poll for new content using the status endpoint
+                        let attempts = 0;
+                        const maxAttempts = 30;
+                        const pollInterval = setInterval(function() {
+                            attempts++;
+                            $.get(window.APP.statusUrl, function(data) {
+                                if (data.news_count > 0 && data.has_unified_script) {
+                                    clearInterval(pollInterval);
+                                    $('#refresh-notification').removeClass('d-none');
+                                    setTimeout(function() {
+                                        location.reload();
+                                    }, 2000);
+                                } else if (attempts >= maxAttempts) {
+                                    clearInterval(pollInterval);
+                                    $('#pipeline-overlay').addClass('d-none');
+                                    $btn.prop('disabled', false).html('<i class="fas fa-sync-alt me-2"></i> Retrieve News Now');
+                                    showAlert('Timeout: still processing. Check server logs.', 'warning');
+                                }
+                            }).fail(function() {
+                                // If the status check fails, continue polling
+                                if (attempts >= maxAttempts) {
+                                    clearInterval(pollInterval);
+                                    $('#pipeline-overlay').addClass('d-none');
+                                    $btn.prop('disabled', false).html('<i class="fas fa-sync-alt me-2"></i> Retrieve News Now');
+                                    showAlert('Status check failed. Please refresh the page manually.', 'danger');
+                                }
+                            });
+                        }, 2000);
+                    },
+                    error: function(xhr, status, error) {
+                        $('#pipeline-overlay').addClass('d-none');
+                        $btn.prop('disabled', false).html('<i class="fas fa-sync-alt me-2"></i> Retrieve News Now');
+                        $('#refresh-notification').addClass('d-none');
+                        showAlert('An error occurred: ' + (xhr.responseJSON?.message || 'Please try again.'), 'danger');
+                    }
+                });
+            });
+
+            // Function to show alerts
+            function showAlert(message, type) {
+                const alertHtml = `
+                    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                $('#notification-area').html(alertHtml);
+                
+                // Auto-dismiss after 5 seconds
+                setTimeout(function() {
+                    $('.alert').alert('close');
+                }, 5000);
+            }
+            
+            // Copy script functionality
+            $(document).on('click', '.copy-btn', function() {
+                const content = $(this).data('content');
+                navigator.clipboard.writeText(content).then(function() {
+                    showAlert('Script copied to clipboard!', 'success');
+                }, function() {
+                    showAlert('Failed to copy script.', 'danger');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

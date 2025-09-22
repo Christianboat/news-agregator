@@ -33,6 +33,13 @@ class SocialMediaScript(db.Model):
     
     news_item = db.relationship('NewsItem', backref=db.backref('scripts', lazy=True))
 
+# NEW: Add UnifiedScript model for the home page
+class UnifiedScript(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    week_start = db.Column(db.DateTime, nullable=False)  # Start of the week this script covers
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))

@@ -1,44 +1,52 @@
-from flask import Blueprint, render_template, flash, redirect, url_for, request
+from flask import Blueprint, render_template, flash, redirect, url_for, request, jsonify, current_app
 from flask_login import current_user, login_user, logout_user, login_required
 from app import db
-from app.models import User, NewsItem, SocialMediaScript
+from app.models import User, NewsItem, SocialMediaScript, UnifiedScript
 from datetime import datetime, timedelta
-import os
+import threading
+import logging
 
-# ✅ Define the blueprint here instead of importing it
+# Import your custom scripts
+from scripts.news_scraper import run_news_pipeline
+from scripts.telegram_bot import send_weekly_digest
+
+# Define the blueprint
 bp = Blueprint('routes', __name__)
 
 @bp.route('/')
 @bp.route('/index')
 @login_required
 def index():
-    # Get this week's news
-    week_start = datetime.utcnow() - timedelta(days=datetime.utcnow().weekday())
+    # start of this week (UTC) as a datetime at 00:00
+    today = datetime.utcnow().date()
+    week_start_date = today - timedelta(days=today.weekday())
+    week_start_dt = datetime.combine(week_start_date, datetime.min.time())
+
     news_items = NewsItem.query.filter(
-        NewsItem.created_at >= week_start
+        NewsItem.created_at >= week_start_dt
     ).order_by(NewsItem.created_at.desc()).all()
 
-    return render_template('index.html', title='Home', news_items=news_items)
+    unified_script = UnifiedScript.query.filter(
+        UnifiedScript.week_start >= week_start_dt
+    ).order_by(UnifiedScript.created_at.desc()).first()
+
+    return render_template('index.html', title='Home',
+                           news_items=news_items, unified_script=unified_script)
 
 @bp.route('/dashboard')
 @login_required
 def dashboard():
-    # Get news from the last 4 weeks
-    four_weeks_ago = datetime.utcnow() - timedelta(weeks=4)
+    four_weeks_ago_dt = datetime.utcnow() - timedelta(weeks=4)
     news_items = NewsItem.query.filter(
-        NewsItem.created_at >= four_weeks_ago
+        NewsItem.created_at >= four_weeks_ago_dt
     ).order_by(NewsItem.created_at.desc()).all()
-    
-    # Group by week
+
     weekly_news = {}
     for item in news_items:
         week = item.created_at.isocalendar()[1]
-        if week not in weekly_news:
-            weekly_news[week] = []
-        weekly_news[week].append(item)
-    
-    return render_template('dashboard.html', title='Dashboard', weekly_news=weekly_news)
+        weekly_news.setdefault(week, []).append(item)
 
+    return render_template('dashboard.html', title='Dashboard', weekly_news=weekly_news)
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -61,4 +69,50 @@ def login():
 @bp.route('/logout')
 def logout():
     logout_user()
-    return redirect(url_for('routes.index'))
+    return redirect(url_for('routes.login'))
+
+@bp.route('/trigger-news', methods=['POST'])
+@login_required
+def trigger_news():
+    """Starts the news pipeline in a background daemon thread."""
+    # Get the application instance
+    app = current_app._get_current_object()
+    
+    def run_pipeline():
+        # Create a new application context for the thread
+        with app.app_context():
+            try:
+                current_app.logger.info("Starting news pipeline in background thread")
+                news_dicts = run_news_pipeline()
+                if news_dicts:
+                    current_app.logger.info(f"Pipeline completed, found {len(news_dicts)} news items")
+                    send_weekly_digest(news_dicts)
+                else:
+                    current_app.logger.info("Pipeline completed but no news items found")
+            except Exception as e:
+                current_app.logger.error(f"Error in news pipeline: {str(e)}")
+
+    thread = threading.Thread(target=run_pipeline)
+    thread.daemon = True
+    thread.start()
+
+    return jsonify({'status': 'success', 'message': 'News retrieval started in the background. All old content has been cleared.'})
+@bp.route('/api/status')
+@login_required
+def api_status():
+    today = datetime.utcnow().date()
+    week_start_date = today - timedelta(days=today.weekday())
+    week_start_dt = datetime.combine(week_start_date, datetime.min.time())
+
+    news_count = NewsItem.query.filter(
+        NewsItem.created_at >= week_start_dt
+    ).count()
+
+    has_unified_script = UnifiedScript.query.filter(
+        UnifiedScript.week_start >= week_start_dt
+    ).first() is not None
+
+    return jsonify({
+        'news_count': news_count,
+        'has_unified_script': has_unified_script
+    })

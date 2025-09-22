@@ -1,0 +1,129 @@
+/* Custom CSS for Ghana Education News Aggregator */
+:root {
+    /* Custom color variables */
+    --primary-color: #0d6efd;
+    --secondary-color: #6f42c1;
+    --text-color: #212529;
+    --light-bg: #f8f9fa;
+    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --transition-speed: 0.3s;
+}
+
+/* Global styles */
+body {
+    color: var(--text-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+}
+
+/* Navigation bar styling */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: rgba(13, 110, 253, 0.95) !important;
+}
+
+.navbar-brand {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.nav-link {
+    color: white !important;
+    font-weight: 500;
+    opacity: 0.9;
+    transition: opacity var(--transition-speed);
+}
+
+.nav-link:hover {
+    opacity: 1;
+}
+
+/* Card styling */
+.card {
+    border: none;
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    background-color: var(--primary-color) !important;
+    color: white;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.card-footer {
+    background-color: var(--light-bg) !important;
+}
+
+/* Button styling */
+.btn {
+    font-weight: 550;
+    transition: all var(--transition-speed);
+    border-radius: 4px;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+.btn-success {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.btn-success:hover {
+    background-color: #157347;
+    border-color: #157347;
+}
+
+/* Alert styling */
+.alert {
+    border-radius: 8px;
+    margin-bottom: 20px;
+    transition: opacity var(--transition-speed);
+}
+
+.alert-info {
+    background-color: #e8f3f9;
+    color: #0d6efd;
+    border-color: #cce5ff;
+}
+
+/* Card image styling */
+.card-img-top {
+    object-fit: cover;
+    height: 200px;
+}
+
+/* Sidebar section */
+.sidebar {
+    padding: 20px;
+}
+
+.sidebar .card {
+    margin-bottom: 20px;
+}
+
+/* Button with loading animation */
+.btn-processing {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-processing:not(:disabled):not(.disabled):active .spinner-border {
+    display: inline-block;
+}
