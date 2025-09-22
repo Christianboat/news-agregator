@@ -10,7 +10,8 @@ A **Flask-based web application** that:
 - Generates short **video scripts** using **Google Gemini AI** ✨  
 - Stores news + scripts in a database 🗂️  
 - Allows staff to **retrieve, manage, and view weekly scripts** 📖  
-- Provides a simple **dashboard** for monitoring 📊  
+- Provides a simple **dashboard** for monitoring 📊
+- Sends content to telegram
 
 ---
 
@@ -22,21 +23,12 @@ A **Flask-based web application** that:
 - ✅ Automatic image scraping + thumbnail generation  
 - ✅ Gemini AI integration for short-form video scripts  
 - ✅ Weekly **unified scripts** and per-news **social media scripts**  
-- ✅ Dashboard to view and track progress  
+- ✅ Dashboard to view and track progress
+- ✅ Telegram Bot integrations  
 - ✅ API endpoints (`/api/status`) for monitoring  
 
 ---
 
-## 🖼️ Screenshots
-
-> _Add your own screenshots here (UI, dashboard, etc.)_
-
-<p align="center">
-  <img src="static/images/screenshot1.png" width="400" alt="Home Page"/>
-  <img src="static/images/screenshot2.png" width="400" alt="Dashboard"/>
-</p>
-
----
 
 ## 🛠️ Tech Stack
 
@@ -51,45 +43,38 @@ A **Flask-based web application** that:
 ## 🚀 Getting Started
 
 ### 1️⃣ Clone the repository
-```bash
 git clone https://github.com/yourusername/edu-news-pipeline.git
 cd edu-news-pipeline
-2️⃣ Set up a virtual environment
-bash
-Copy code
+
+### 2️⃣ Set up a virtual environment
 python3 -m venv venv
 source venv/bin/activate
-3️⃣ Install dependencies
-bash
-Copy code
-pip install -r requirements.txt
-4️⃣ Configure environment variables
-Create a .env file in the project root:
 
-ini
-Copy code
+### 3️⃣ Install dependencies
+pip install -r requirements.txt
+
+### 4️⃣ Configure environment variables
+update the config.py file in the project root:
+
 SECRET_KEY=your-secret-key
 DATABASE_URL=sqlite:///app.db
 
 TELEGRAM_BOT_TOKEN=your-telegram-bot-token
 TELEGRAM_CHAT_ID=your-chat-id
 GEMINI_API_KEY=your-gemini-api-key
-5️⃣ Initialize the database
-bash
-Copy code
+
+### 5️⃣ Initialize the database
 flask db upgrade   # If using Flask-Migrate
 # OR quick dev start:
 python -c "from app import create_app, db; app=create_app(); 
 with app.app_context(): db.create_all()"
-6️⃣ Run the app
-bash
-Copy code
+
+### 6️⃣ Run the app
+
 flask run
 Then visit 👉 http://127.0.0.1:5000/
 
 📂 Project Structure
-arduino
-Copy code
 .
 ├── app/
 │   ├── __init__.py
@@ -106,7 +91,8 @@ Copy code
 ├── run.py
 ├── requirements.txt
 └── README.md
-🔄 Workflow
+
+### 🔄 Workflow
 User logs in ➝ clicks Retrieve News
 
 Background thread runs the news pipeline:
@@ -122,6 +108,8 @@ Generates AI video scripts
 Saves unified + per-news scripts to DB
 
 UI dashboard updates with weekly stats
+
+Sends updates to th telegram chat
 
 🧪 Development Notes
 Uses background threads for the pipeline ➝ doesn’t block UI
@@ -139,20 +127,9 @@ Passwords hashed with Werkzeug (generate_password_hash)
 
 Session managed with Flask-Login
 
-📌 Roadmap
- Add pagination to dashboard
-
- Add support for more news sources
-
- Add user roles (admin, staff, viewer)
-
- Deploy to free hosting (Render, Railway, or other Heroku alternative)
-
-🤝 Contributing
-Pull requests welcome! Please fork the repo and submit a PR.
-For major changes, open an issue first to discuss what you’d like to change.
 
 📜 License
 This project is licensed under the MIT License.
 
-<p align="center"> Made with ❤️ using Flask & Gemini AI </p> ```
+--
+<p align="center"> Made with ❤️ using Flask & Gemini AI </p>
