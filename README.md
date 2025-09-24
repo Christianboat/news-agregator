@@ -43,7 +43,7 @@ A **Flask-based web application** that:
 ## 🚀 Getting Started
 
 ### 1️⃣ Clone the repository
-git clone https://github.com/yourusername/edu-news-pipeline.git
+git clone https://github.com/christianboat/edu-news-pipeline.git
 cd edu-news-pipeline
 
 ### 2️⃣ Set up a virtual environment
